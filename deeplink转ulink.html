@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>调起链接转换工具</title>
+  <style>
+    :root{ --bg:#0b0f17; --card:#121826; --muted:#9aa4b2; --text:#e6edf3; --accent:#4f8cff; --accent-2:#7aa2ff; --danger:#ff5d5d; --warn:#ffb020; --ok:#22c55e; --border:#1f2633; --input-bg:#0e1420; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background: radial-gradient(1200px 1200px at 80% -10%, #1a2340 0%, #0b0f0f 50%, #0b0f17 100%) fixed;color:var(--text)}
+    .container{max-width:1280px;margin:0 auto;padding:16px;min-height:100%;display:flex;flex-direction:column;gap:16px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .title{font-size:20px;font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:10px}
+    .badge{font-size:12px;color:#cbd5e1;background:linear-gradient(135deg,#1b2334,#0e1420);border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:linear-gradient(180deg,#0e1420,#0b111b);cursor:pointer;color:#cbd5e1}
+    .tab.active{background:linear-gradient(180deg,#19233a,#121a2b);color:#e6edf3;border-color:#2a3650}
+    .card{background:linear-gradient(180deg,var(--card),#0f1626);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1 1 auto;min-height:0}
+    @media (max-width:900px){ .row{grid-template-columns:1fr} }
+    .col{display:flex;flex-direction:column;gap:8px;min-height:0}
+    .section-title{font-size:14px;color:#cbd5e1;margin:2px 0 4px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .seg{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:12px}
+    .radio-group,.choice{display:flex;gap:12px;flex-wrap:wrap}
+    .radio,.chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:linear-gradient(180deg,#0e1420,#0b111b);user-select:none;color:#e2e8f0}
+    .radio input{appearance:none;width:16px;height:16px;border-radius:50%;border:2px solid #7790ff;background:transparent}
+    .radio input:checked{background: radial-gradient(circle at 50% 50%, #7aa2ff 0 50%, transparent 51%)}
+    textarea{width:100%;background:var(--input-bg);color:#e6edf3;border:1px solid var(--border);border-radius:10px;padding:12px;line-height:1.6;font-size:14px;outline:none;resize:vertical;min-height:360px;height:100%}
+    .output{white-space:pre-wrap;word-break:break-all}
+    .hint{font-size:12px;color:#9aa4b2;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+    .count{opacity:.9}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    button{appearance:none;border:none;cursor:pointer;padding:10px 14px;border-radius:10px;font-weight:600;background:linear-gradient(180deg,var(--accent),var(--accent-2));color:white;box-shadow:0 6px 16px rgba(79,140,255,.35);transition:transform .04s ease,filter .2s ease,opacity .2s;white-space:nowrap}
+    button:active{transform:translateY(1px)}
+    button.secondary{background:linear-gradient(180deg,#1a2334,#101726);color:#e2e8f0;border:1px solid var(--border);box-shadow:none}
+    button.warn{background:linear-gradient(180deg,#ffb020,#ff8a00);box-shadow:0 6px 16px rgba(255,160,0,.35)}
+    button.ghost{background:transparent;border:1px dashed var(--border);color:#cbd5e1}
+    .alert{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:linear-gradient(180deg,#131a2a,#0f1626);font-size:13px;color:#e2e8f0}
+    .alert.ok{border-color:#1b6b3b;background:linear-gradient(180deg,#0f2a1a,#0d2116);color:#d1fae5}
+    .alert.warn{border-color:#6b4b1b;background:linear-gradient(180deg,#2a1f0f,#1c160b);color:#ffedd5}
+    .alert.danger{border-color:#6b1b1b;background:linear-gradient(180deg,#2a0f0f,#0c0b0b);color:#fee2e2}
+    .tools{display:none} .tools.active{display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#0b111b;border:1px solid #1e2736;padding:1px 6px;border-radius:6px}
+    .footer{color:#94a3b8;font-size:12px;text-align:center;display:flex;flex-direction:column;gap:8px}
+    .footer .contact{color:#cbd5e1}
+    .divider{height:1px;background:var(--border);margin:8px 0}
+    .note{font-size:12px;color:#9aa4b2}
+    input[type="file"]{display:none}
+    .fileline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .filelabel{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:linear-gradient(180deg,#1a2334,#101726);color:#e2e8f0;border:1px solid var(--border);cursor:pointer}
+    .pill{font-size:12px;color:#cbd5e1;background:#0f1626;border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+    .filecard{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px dashed var(--border);border-radius:10px;background:linear-gradient(180deg,#0e1420,#0b111b);color:#cbd5e1;max-width:100%;flex-wrap:wrap}
+    .filemeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .filename{font-weight:600;color:#e6edf3}
+    .filesize{font-size:12px;color:#9aa4b2}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">调起链接转换工具 <span class="badge">本地离线</span></div>
+      <div style="font-size:12px;color:#cbd5e1;">快捷键 <span class="kbd">Ctrl/⌘</span> + <span class="kbd">Enter</span> 生成</div>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="功能选择">
+      <button class="tab active" data-tab="ulink">deeplink 转换 ulink</button>
+      <button class="tab" data-tab="meituan">美团增加返回按钮</button>
+    </div>
+
+    <section id="tool-ulink" class="tools active">
+      <div class="card">
+        <div class="seg" aria-label="渠道选择">
+          <div class="radio-group" role="radiogroup">
+            <label class="radio"><input type="radio" name="channel" value="tb" checked /> <span>调起淘宝</span></label>
+            <label class="radio"><input type="radio" name="channel" value="jd" /> <span>调起京东</span></label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <div class="section-title">输入 deeplink</div>
+            <textarea id="input-ulink" placeholder="粘贴 deeplink（只接受 tbopen:// 或 openapp.jdmobile://）"></textarea>
+            <div class="hint"><span></span><span class="count"><span id="inCount-ulink">0</span> 字符</span></div>
+            <div class="btns">
+              <button id="genBtn-ulink">生成 ulink</button>
+              <button id="pasteBtn-ulink" class="secondary">粘贴</button>
+              <button id="clearBtn-ulink" class="ghost">清空</button>
+            </div>
+            <div id="inputAlert-ulink" class="alert danger" style="display:none"></div>
+          </div>
+
+          <div class="col">
+            <div class="section-title">输出 ulink</div>
+            <textarea id="output-ulink" class="output" placeholder="生成的 ulink 将显示在此处" readonly></textarea>
+            <div class="hint"><span></span><span class="count"><span id="outCount-ulink">0</span> 字符</span></div>
+            <div class="btns"><button id="copyBtn-ulink" class="secondary">复制 ulink</button></div>
+            <div id="outputAlert-ulink" class="alert ok" style="display:none"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-title">
+          批量转换（Excel）
+          <span class="pill">第1列为输入 deeplink</span>
+          <span class="note">支持 .xlsx；仅处理第一个工作表；输出两列：输入 deeplink / 输出结果</span>
+        </div>
+        <div class="fileline">
+          <label class="filelabel" for="file-xlsx">选择 Excel 文件</label>
+          <input id="file-xlsx" type="file" accept=".xlsx" />
+          <button id="btn-batch-run">开始批量转换</button>
+          <button id="btn-batch-download" class="secondary" disabled>下载结果 Excel</button>
+        </div>
+        <div id="filecard" class="filecard" style="display:none">
+          <div class="filemeta">
+            <span class="filename" id="fc-name"></span>
+            <span class="filesize" id="fc-size"></span>
+          </div>
+          <div class="btns" style="margin-left:auto">
+            <button id="fc-remove" class="ghost">删除</button>
+          </div>
+        </div>
+        <div id="batch-alert" class="alert warn" style="display:none"></div>
+      </div>
+    </section>
+
+    <section id="tool-meituan" class="tools">
+      <div class="card">
+        <div class="seg">
+          <div class="choice" id="mt-return-choice">
+            <label class="chip active" data-return="baidu"><input type="radio" name="mtReturn" value="baidu" checked /> 返回手百</label>
+            <label class="chip" data-return="map"><input type="radio" name="mtReturn" value="map" /> 返回地图</label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <div class="section-title">输入美团 deeplink</div>
+            <textarea id="input-mt" placeholder="支持：
+imeituan://www.meituan.com/takeout
+imeituan://www.meituan.com/msc"></textarea>
+            <div class="hint"><span></span><span class="count"><span id="inCount-mt">0</span> 字符</span></div>
+            <div class="btns">
+              <button id="genBtn-mt">生成</button>
+              <button id="pasteBtn-mt" class="secondary">粘贴</button>
+              <button id="clearBtn-mt" class="ghost">清空</button>
+            </div>
+            <div id="inputAlert-mt" class="alert danger" style="display:none"></div>
+          </div>
+          <div class="col">
+            <div class="section-title">输出 deeplink（已带返回按钮）</div>
+            <textarea id="output-mt" class="output" placeholder="生成的 deeplink 将显示在此处" readonly></textarea>
+            <div class="hint"><span></span><span class="count"><span id="outCount-mt">0</span> 字符</span></div>
+            <div class="btns"><button id="copyBtn-mt" class="secondary">复制</button></div>
+            <div id="outputAlert-mt" class="alert ok" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div>兼容 Chrome / Edge / Firefox / Safari。所有转换均在本地完成，不会发出网络请求。</div>
+      <div class="contact">更多开屏调起需求请联系：wangzhen51@baidu.com</div>
+    </div>
+  </div>
+
+  <!-- 轻量 XLSX 解析，仅用于读取上传文件 -->
+  <script>
+    (function(){
+      function u16(u8,off){ return u8[off] | (u8[off+1]<<8); }
+      function u32(u8,off){ return (u8[off]) | (u8[off+1]<<8) | (u8[off+2]<<16) | (u8[off+3]<<24); }
+      function colNameToIdx(col){ let idx=0; for(let i=0;i<col.length;i++) idx = idx*26 + (col.charCodeAt(i)-64); return idx-1; }
+      function parseCentralDirectory(u8){
+        let i = u8.length - 22; for(;i>=0;i--){ if(u8[i]===0x50&&u8[i+1]===0x4b&&u8[i+2]===0x05&&u8[i+3]===0x06) break; }
+        if(i<0) throw new Error('EOCD not found');
+        const total = u16(u8, i+10); const cdirOffset = u32(u8, i+16);
+        const files=[]; let p=cdirOffset; const td = new TextDecoder();
+        for(let n=0;n<total;n++){
+          if(!(u8[p]===0x50&&u8[p+1]===0x4b&&u8[p+2]===0x01&&u8[p+3]===0x02)) break;
+          const comp=u16(u8,p+10), csize=u32(u8,p+20), usize=u32(u8,p+24);
+          const nlen=u16(u8,p+28), elen=u16(u8,p+30), clen=u16(u8,p+32), lfhOffset=u32(u8,p+42);
+          const name=td.decode(u8.subarray(p+46,p+46+nlen));
+          files.push({name,comp,csize,usize,lfhOffset});
+          p += 46+nlen+elen+clen;
+        }
+        return files;
+      }
+      async function inflateRaw(u8){
+        if(typeof DecompressionStream==='function'){
+          const ds = new DecompressionStream('deflate-raw');
+          const ab = await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer();
+          return new Uint8Array(ab);
+        }
+        throw new Error('No deflate support');
+      }
+      async function unzipToTextMap(u8){
+        const list = parseCentralDirectory(u8); const out={}; const td=new TextDecoder();
+        for(const f of list){
+          let p=f.lfhOffset; if(!(u8[p]===0x50&&u8[p+1]===0x4b&&u8[p+2]===0x03&&u8[p+3]===0x04)) continue;
+          const nlen = u16(u8,p+26); const elen=u16(u8,p+28);
+          const dataStart=p+30+nlen+elen; const data = u8.subarray(dataStart, dataStart+f.csize);
+          let buf;
+          if(f.comp===0) buf=data;
+          else if(f.comp===8) buf=await inflateRaw(data);
+          else buf=new Uint8Array();
+          out[f.name]=td.decode(buf);
+        }
+        return out;
+      }
+      function parseSharedStrings(xml){
+        if(!xml) return []; const doc=new DOMParser().parseFromString(xml,'application/xml');
+        return Array.from(doc.getElementsByTagName('si')).map(si=>{
+          return Array.from(si.getElementsByTagName('t')).map(t=>t.textContent||'').join('');
+        });
+      }
+      function parseSheet(xml,sst){
+        if(!xml) return []; const doc=new DOMParser().parseFromString(xml,'application/xml');
+        const rows = Array.from(doc.getElementsByTagName('row')); const out=[];
+        rows.forEach((row)=>{
+          const cells = Array.from(row.getElementsByTagName('c'));
+          let max=-1; const arr=[];
+            cells.forEach(c=>{
+            const r = c.getAttribute('r')||''; const m=r.match(/([A-Z]+)(\d+)/i);
+            let col=0; if(m) col = colNameToIdx(m[1].toUpperCase()); if(col>max) max=col;
+            const t=c.getAttribute('t'); let v='';
+            if(t==='inlineStr'){ const tn=c.getElementsByTagName('t')[0]; v=tn?tn.textContent:''; }
+            else if(t==='s'){ const vn=c.getElementsByTagName('v')[0]; const idx=vn?parseInt(vn.textContent,10):NaN; v=Number.isFinite(idx)&&sst[idx]!=null?sst[idx]:''; }
+            else{ const vn=c.getElementsByTagName('v')[0]; v=vn?vn.textContent:''; }
+            arr[col]=v;
+          });
+          out.push(Array.from({length:Math.max(0,max)+1},(_,i)=>arr[i]??''));
+        });
+        return out;
+      }
+      async function parseXLSX(file){
+        const ab = await file.arrayBuffer(); const u8=new Uint8Array(ab);
+        const txt = await unzipToTextMap(u8);
+        const sst = parseSharedStrings(txt['xl/sharedStrings.xml']);
+        let sheetPath='xl/worksheets/sheet1.xml';
+        const rels=txt['xl/_rels/workbook.xml.rels'];
+        if(rels){
+          try{
+            const doc=new DOMParser().parseFromString(rels,'application/xml');
+            const ws = Array.from(doc.getElementsByTagName('Relationship')).find(n=>(n.getAttribute('Type')||'').includes('/worksheet'));
+            if(ws){ const target=ws.getAttribute('Target')||''; sheetPath = target.startsWith('/')?('xl'+target):('xl/'+target); }
+          }catch(e){}
+        }
+        if(!txt[sheetPath]){
+          const keys = Object.keys(txt).filter(k=>/^xl\/worksheets\/.+\.xml$/.test(k)); if(keys.length>0) sheetPath=keys[0];
+        }
+        return parseSheet(txt[sheetPath]||'', sst);
+      }
+      window.__XLSXRead = { parseXLSX };
+    })();
+  </script>
+
+  <!-- XLSX 生成（修复 XML 非法字符与空白保留；严格 ZIP + CRC32） -->
+  <script>
+    (function(){
+      // 清洗 XML 1.0 非法字符，并统一换行
+      function stripInvalidXmlChars(str){
+        return String(str).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+      }
+      function xmlEscapeSafe(s){
+        s = stripInvalidXmlChars(s).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function colIdxToName(idx){
+        let s=''; idx++; while(idx>0){ const m=(idx-1)%26; s=String.fromCharCode(65+m)+s; idx=Math.floor((idx-1)/26); }
+        return s;
+      }
+      function buildWorksheetXML(rows){
+        let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+        xml += '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+        for(let r=0;r<rows.length;r++){
+          xml += `<row r="${r+1}">`;
+          const row = rows[r] || [];
+          for(let c=0;c<row.length;c++){
+            let v = row[c];
+            if(v == null || v === '') continue;
+            const esc = xmlEscapeSafe(String(v));
+            if(esc.length === 0) continue;
+            const ref = colIdxToName(c) + (r+1);
+            xml += `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${esc}</t></is></c>`;
+          }
+          xml += '</row>';
+        }
+        xml += '</sheetData></worksheet>';
+        return xml;
+      }
+
+      // CRC32
+      const CRC_TABLE = (()=>{ const tbl=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++){ c = (c&1)?(0xEDB88320^(c>>>1)):(c>>>1); } tbl[n]=c>>>0; } return tbl; })();
+      function crc32(u8){ let c = 0xFFFFFFFF>>>0; for(let i=0;i<u8.length;i++){ c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c>>>8); } return (c ^ 0xFFFFFFFF) >>> 0; }
+      function writeU16(view, off, v){ view[off] = v & 0xFF; view[off+1] = (v>>>8)&0xFF; }
+      function writeU32(view, off, v){ view[off] = v & 0xFF; view[off+1] = (v>>>8)&0xFF; view[off+2] = (v>>>16)&0xFF; view[off+3] = (v>>>24)&0xFF; }
+      function encodeUTF8(str){ return new TextEncoder().encode(str); }
+
+      // ZIP 存储模式
+      function zipStore(files){
+        const entries=[]; let lfhBytes=0, cdirBytes=0;
+        for(const f of files){
+          const nameU8 = encodeUTF8(f.name);
+          const dataU8 = f.data;
+          const crc = crc32(dataU8);
+          const nlen = nameU8.length;
+          const lfhSize = 30 + nlen + 0 + dataU8.length;
+          const cdirSize = 46 + nlen + 0;
+          entries.push({nameU8,dataU8,crc,nlen,lfhOffset:lfhBytes,lfhSize,cdirSize});
+          lfhBytes += lfhSize; cdirBytes += cdirSize;
+        }
+        const eocdSize=22, totalSize=lfhBytes+cdirBytes+eocdSize;
+        const out=new Uint8Array(totalSize); let p=0;
+
+        // Local headers + data
+        for(const e of entries){
+          out[p++]=0x50; out[p++]=0x4B; out[p++]=0x03; out[p++]=0x04;
+          writeU16(out,p,20); p+=2; // version needed
+          writeU16(out,p,0); p+=2;  // flags
+          writeU16(out,p,0); p+=2;  // method store
+          writeU16(out,p,0); p+=2;  // time
+          writeU16(out,p,0); p+=2;  // date
+          writeU32(out,p,e.crc); p+=4;
+          writeU32(out,p,e.dataU8.length); p+=4;
+          writeU32(out,p,e.dataU8.length); p+=4;
+          writeU16(out,p,e.nlen); p+=2;
+          writeU16(out,p,0); p+=2; // extra
+          out.set(e.nameU8,p); p+=e.nlen;
+          out.set(e.dataU8,p); p+=e.dataU8.length;
+        }
+        const cdirOffset=p;
+
+        // Central directory
+        for(const e of entries){
+          out[p++]=0x50; out[p++]=0x4B; out[p++]=0x01; out[p++]=0x02;
+          writeU16(out,p,20); p+=2; // version made by (lower byte)
+          writeU16(out,p,20); p+=2; // version needed
+          writeU16(out,p,0); p+=2;  // flags
+          writeU16(out,p,0); p+=2;  // method
+          writeU16(out,p,0); p+=2;  // time
+          writeU16(out,p,0); p+=2;  // date
+          writeU32(out,p,e.crc); p+=4;
+          writeU32(out,p,e.dataU8.length); p+=4;
+          writeU32(out,p,e.dataU8.length); p+=4;
+          writeU16(out,p,e.nlen); p+=2;
+          writeU16(out,p,0); p+=2; // extra
+          writeU16(out,p,0); p+=2; // comment
+          writeU16(out,p,0); p+=2; // disk start
+          writeU16(out,p,0); p+=2; // internal attrs
+          writeU32(out,p,0); p+=4; // external attrs
+          writeU32(out,p,e.lfhOffset); p+=4;
+          out.set(e.nameU8,p); p+=e.nlen;
+        }
+        const cdirSize=p-cdirOffset;
+
+        // EOCD
+        out[p++]=0x50; out[p++]=0x4B; out[p++]=0x05; out[p++]=0x06;
+        writeU16(out,p,0); p+=2; // disk
+        writeU16(out,p,0); p+=2; // disk
+        writeU16(out,p,entries.length); p+=2;
+        writeU16(out,p,entries.length); p+=2;
+        writeU32(out,p,cdirSize); p+=4;
+        writeU32(out,p,cdirOffset); p+=4;
+        writeU16(out,p,0); p+=2; // comment
+        return out;
+      }
+
+      function buildXLSX(rows){
+        const sheet = buildWorksheetXML(rows);
+        const files = [
+          {
+            name: '[Content_Types].xml',
+            data: encodeUTF8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/></Types>')
+          },
+          {
+            name: '_rels/.rels',
+            data: encodeUTF8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
+          },
+          {
+            name: 'xl/workbook.xml',
+            data: encodeUTF8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>')
+          },
+          {
+            name: 'xl/_rels/workbook.xml.rels',
+            data: encodeUTF8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>')
+          },
+          {
+            name: 'xl/worksheets/sheet1.xml',
+            data: encodeUTF8(sheet)
+          }
+        ];
+        const zipBytes = zipStore(files);
+        return new Blob([zipBytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      }
+
+      function saveBlob(blob, name){
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = name || 'result.xlsx';
+        document.body.appendChild(a); a.click();
+        setTimeout(()=>{ URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
+      }
+
+      window.__XLSXWrite = { buildXLSX, saveBlob };
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const $ = s=>document.querySelector(s);
+      const $$ = s=>Array.from(document.querySelectorAll(s));
+
+      const tabs = $$('.tab');
+      const tools = { ulink: $('#tool-ulink'), meituan: $('#tool-meituan') };
+      tabs.forEach(t=>t.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        Object.values(tools).forEach(el=>el.classList.remove('active'));
+        tools[t.dataset.tab].classList.add('active');
+      }));
+
+      function setAlert(el, state){
+        if(!state){ el.style.display='none'; el.textContent=''; return; }
+        el.classList.remove('ok','warn','danger');
+        el.classList.add(state.level||'warn');
+        el.textContent = state.msg || '';
+        el.style.display = state.msg ? '' : 'none';
+      }
+
+      // 单条转换
+      const inU = $('#input-ulink'), outU = $('#output-ulink');
+      const genU = $('#genBtn-ulink'), pasteU = $('#pasteBtn-ulink'), clearU = $('#clearBtn-ulink');
+      const copyU = $('#copyBtn-ulink');
+      const alertInU = $('#inputAlert-ulink'), alertOutU = $('#outputAlert-ulink');
+      const inCountU = $('#inCount-ulink'), outCountU = $('#outCount-ulink');
+
+      function getChannel(){ return document.querySelector('input[name="channel"]:checked').value; }
+      function validateU(ch, v){
+        const val = (v||'').trim();
+        if(!val) return {ok:false, level:'danger', msg:'请输入 deeplink'};
+        if(ch === 'tb'){
+          if(!/^tbopen:\/\//i.test(val)) return {ok:false, level:'danger', msg:'淘宝 deeplink 必须以 tbopen:// 开头'};
+        }else{
+          if(!/^openapp\.jdmobile:\/\//i.test(val)) return {ok:false, level:'danger', msg:'京东 deeplink 必须以 openapp.jdmobile:// 开头'};
+        }
+        return {ok:true};
+      }
+      function buildU(ch, v){
+        const src = (v||'').trim();
+        if(!src) return '';
+        return ch==='tb'
+          ? 'https://ulk.alimama.com/tb?smburl=' + encodeURIComponent(src)
+          : 'https://linkst.m.jd.com/ul/ul.action?' + src;
+      }
+      function updateCountsU(){ inCountU.textContent=(inU.value||'').length; outCountU.textContent=(outU.value||'').length; }
+      function generateU(){
+        const ch = getChannel();
+        const v = inU.value;
+        const res = validateU(ch, v);
+        if(!res.ok){ setAlert(alertInU, res); outU.value=''; setAlert(alertOutU,null); return updateCountsU(); }
+        setAlert(alertInU, null);
+        const out = buildU(ch, v);
+        outU.value = out; updateCountsU();
+        setAlert(alertOutU, out ? {level:'ok', msg:'已生成 ulink'} : null);
+      }
+      genU.addEventListener('click', generateU);
+      pasteU.addEventListener('click', async ()=>{ try{ const t=await navigator.clipboard.readText(); if(t){ inU.value=t; updateCountsU(); } }catch(e){} });
+      clearU.addEventListener('click', ()=>{ inU.value=''; outU.value=''; setAlert(alertInU,null); setAlert(alertOutU,null); updateCountsU(); inU.focus(); });
+      copyU.addEventListener('click', async ()=>{
+        const text = outU.value; if(!text){ return setAlert(alertOutU,{level:'warn',msg:'暂无可复制的 ulink'}); }
+        try{ await navigator.clipboard.writeText(text); setAlert(alertOutU,{level:'ok',msg:'已复制到剪贴板'});}catch(e){ setAlert(alertOutU,{level:'danger',msg:'复制失败'}); }
+      });
+      inU.addEventListener('input', ()=>{ setAlert(alertInU,null); setAlert(alertOutU,null); updateCountsU(); });
+      $$('.radio input[name="channel"]').forEach(r=>r.addEventListener('change', ()=>{ setAlert(alertInU,null); setAlert(alertOutU,null); outU.value=''; updateCountsU(); }));
+
+      // 批量
+      const fileXlsx = $('#file-xlsx'), btnBatchRun = $('#btn-batch-run'), btnBatchDownload = $('#btn-batch-download');
+      const batchAlert = $('#batch-alert'), filecard = $('#filecard'), fcName = $('#fc-name'), fcSize = $('#fc-size'), fcRemove = $('#fc-remove');
+      let batchResultBlob = null, selectedFile = null;
+
+      function humanSize(bytes){ if(bytes<1024) return bytes+' B'; const kb=bytes/1024; if(kb<1024) return Math.round(kb)+' KB'; const mb=kb/1024; return (mb>=100?Math.round(mb):(Math.round(mb*10)/10))+' MB'; }
+      function showFileCard(file){ if(!file){ filecard.style.display='none'; fcName.textContent=''; fcSize.textContent=''; return; } fcName.textContent=file.name; fcSize.textContent='· '+humanSize(file.size); filecard.style.display=''; }
+      function resetBatchUI(){ batchResultBlob=null; btnBatchDownload.disabled=true; setAlert(batchAlert,null); }
+
+      fileXlsx.addEventListener('change', ()=>{ resetBatchUI(); selectedFile = fileXlsx.files && fileXlsx.files[0] ? fileXlsx.files[0] : null; showFileCard(selectedFile); });
+      fcRemove.addEventListener('click', ()=>{ selectedFile=null; fileXlsx.value=''; showFileCard(null); resetBatchUI(); });
+
+      btnBatchRun.addEventListener('click', async ()=>{
+        const ch = getChannel();
+        const file = selectedFile || (fileXlsx.files && fileXlsx.files[0]);
+        if(!file) return setAlert(batchAlert,{level:'danger',msg:'请先选择 .xlsx 文件'});
+        setAlert(batchAlert,{level:'warn',msg:'正在读取并转换，请稍候...'}); btnBatchRun.disabled=true;
+        try{
+          const rows = await window.__XLSXRead.parseXLSX(file);
+          if(!rows || rows.length===0){ setAlert(batchAlert,{level:'danger',msg:'未读取到任何行，请确认首个工作表存在数据'}); return; }
+          const output = [['输入 deeplink','输出结果']];
+          let validCount = 0;
+          rows.forEach(row=>{
+            const input = row && row[0] != null ? String(row[0]).trim() : '';
+            if(!input){ output.push(['', '输入有误']); return; }
+            const res = validateU(ch, input);
+            if(!res.ok){ output.push([input, '输入有误']); return; }
+            output.push([input, buildU(ch, input)]);
+            validCount++;
+          });
+          if(output.length<=1){ setAlert(batchAlert,{level:'danger',msg:'未解析到有效数据（第1列为空或均不符合所选渠道）'}); return; }
+          batchResultBlob = window.__XLSXWrite.buildXLSX(output);
+          btnBatchDownload.disabled = false;
+          setAlert(batchAlert,{level:'ok',msg:`转换完成：有效 ${validCount} 行，合计 ${output.length-1} 行，可下载结果 Excel。`});
+        }catch(err){
+          console.error(err);
+          setAlert(batchAlert,{level:'danger',msg:'解析失败：文件可能损坏或包含不受支持的结构。可尝试在 Excel 中另存为 .xlsx 后重试。'});
+        }finally{
+          btnBatchRun.disabled=false;
+        }
+      });
+      btnBatchDownload.addEventListener('click', ()=>{ if(batchResultBlob) window.__XLSXWrite.saveBlob(batchResultBlob, 'result.xlsx'); });
+
+      // 美团
+      const inM=$('#input-mt'), outM=$('#output-mt'), genM=$('#genBtn-mt'), pasteM=$('#pasteBtn-mt'), clearM=$('#clearBtn-mt'), copyM=$('#copyBtn-mt');
+      const alertInM=$('#inputAlert-mt'), alertOutM=$('#outputAlert-mt'), inCountM=$('#inCount-mt'), outCountM=$('#outCount-mt');
+      const chips = Array.from(document.querySelectorAll('#mt-return-choice .chip'));
+      function getReturnTarget(){ const a=chips.find(c=>c.classList.contains('active')); return a && a.dataset.return==='map' ? 'map' : 'baidu'; }
+      chips.forEach(chip=>chip.addEventListener('click', ()=>{ chips.forEach(c=>c.classList.remove('active')); chip.classList.add('active'); }));
+      function updateCountsM(){ inCountM.textContent=(inM.value||'').length; outCountM.textContent=(outM.value||'').length; }
+      function validateM(v){
+        const val=(v||'').trim(); if(!val) return {ok:false, level:'danger', msg:'请输入美团 deeplink'};
+        const isTakeout=/^imeituan:\/\/www\.meituan\.com\/takeout/i.test(val);
+        const isMsc=/^imeituan:\/\/www\.meituan\.com\/msc/i.test(val);
+        if(!(isTakeout||isMsc)) return {ok:false, level:'danger', msg:'仅支持 takeout 与 msc 协议'};
+        return {ok:true, isTakeout, isMsc};
+      }
+      function buildM(v,target){
+        const src=(v||'').trim(); const vr=validateM(src); if(!vr.ok) return '';
+        let tail=''; if(vr.isTakeout){ tail = target==='map' ? '&qdjm=0&qdtznum=28&backurl=baidumap%3A%2F%2Fmap&forceShowReturn=true' : '&qdjm=0&qdtznum=10&backurl=baiduboxapp%3A%2F%2Fdonothing&forceShowReturn=true'; }
+        else{ tail = target==='map' ? '&qdjm=0&qdtznum=28&backurl=baidumap%3A%2F%2Fmap' : '&qdjm=0&qdtznum=10&backurl=baiduboxapp%3A%2F%2Fdonothing'; }
+        return src+tail;
+      }
+      function generateM(){
+        const v=inM.value; const r=validateM(v);
+        if(!r.ok){ setAlert(alertInM,r); outM.value=''; setAlert(alertOutM,null); updateCountsM(); return; }
+        setAlert(alertInM,null); const out=buildM(v,getReturnTarget()); outM.value=out; updateCountsM(); setAlert(alertOutM,{level:'ok',msg:'已生成带返回按钮的 deeplink'});
+      }
+      genM.addEventListener('click', generateM);
+      pasteM.addEventListener('click', async ()=>{ try{ const t=await navigator.clipboard.readText(); if(t){ inM.value=t; updateCountsM(); } }catch(e){} });
+      clearM.addEventListener('click', ()=>{ inM.value=''; outM.value=''; setAlert(alertInM,null); setAlert(alertOutM,null); updateCountsM(); inM.focus(); });
+      copyM.addEventListener('click', async ()=>{ const text=outM.value; if(!text) return setAlert(alertOutM,{level:'warn',msg:'暂无可复制的链接'}); try{ await navigator.clipboard.writeText(text); setAlert(alertOutM,{level:'ok',msg:'已复制到剪贴板'});}catch(e){ setAlert(alertOutM,{level:'danger',msg:'复制失败'}); } });
+
+      // 快捷键
+      document.addEventListener('keydown', (e)=>{
+        if((e.ctrlKey||e.metaKey) && e.key==='Enter'){
+          e.preventDefault();
+          if(tools.ulink.classList.contains('active')){ generateU(); } else { generateM(); }
+        }
+      });
+
+      // 初始计数
+      function updateCountsU(){ document.querySelector('#inCount-ulink').textContent=(inU.value||'').length; document.querySelector('#outCount-ulink').textContent=(outU.value||'').length; }
+      updateCountsU(); updateCountsM();
+    })();
+  </script>
+</body>
+</html>
